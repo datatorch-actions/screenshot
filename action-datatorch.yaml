@@ -1,0 +1,99 @@
+name: Screenshot
+author: DataTorch
+description: >-
+  Renders a web page (or a given HTML document) in headless Chrome on the
+  runner and saves the PNG into the project at the path given, so an agent
+  without a browser can put a real figure on a page. Drives the Chrome
+  installed on the runner machine through Playwright (brought in by this
+  action's requirements, no browser download). With auth on, every request
+  the page makes carries the runner's DataTorch API key, so pages of a
+  private project render logged in; a page that still lands on a sign-in
+  screen is retried by a client-side route change from the site root.
+  Overwrites a file already at the path unless told otherwise. Needs
+  Google Chrome on the runner and DATATORCH_API_KEY in its environment.
+inputs:
+  url:
+    type: string
+    description: The page to render. Either this or html.
+    default: ""
+  html:
+    type: string
+    description: An HTML document to render instead of a URL (a chart, a table). Either this or url.
+    default: ""
+  path:
+    type: string
+    description: Project path for the PNG, e.g. site/resources/assets/bbbc013-viewer.png. Must end in .png.
+    required: true
+  width:
+    type: integer
+    description: Viewport width in CSS pixels.
+    default: 1600
+  height:
+    type: integer
+    description: Viewport height in CSS pixels.
+    default: 1000
+  scale:
+    type: integer
+    description: Device scale factor; 2 gives a crisp image twice the viewport in pixels.
+    default: 2
+  full_page:
+    type: boolean
+    description: Capture the whole scrollable page instead of the viewport.
+    default: false
+  selector:
+    type: string
+    description: Capture only this element (a CSS selector) instead of the viewport.
+    default: ""
+  wait_for:
+    type: string
+    description: A CSS selector that must be present before the shot (for pages that load their content late).
+    default: ""
+  wait_ms:
+    type: integer
+    description: Extra milliseconds to wait after the page settles, for animations and lazy images.
+    default: 1500
+  click:
+    type: string
+    description: A CSS selector to click before the shot (opens a panel, selects a tab). Empty clicks nothing.
+    default: ""
+  hide:
+    type: string
+    description: Comma-separated CSS selectors to hide before the shot (a navbar, a cookie bar).
+    default: ""
+  auth:
+    type: boolean
+    description: Send the runner's DataTorch API key with every request the page makes, for private project pages.
+    default: false
+  project:
+    type: string
+    description: The project to save into, as <login>/<slug>. Empty means the project this run belongs to.
+    default: ""
+  overwrite:
+    type: boolean
+    description: Replace a file already at the path. Off, the run fails if one exists.
+    default: true
+  timeout:
+    type: integer
+    description: Seconds to wait for the page to load.
+    default: 60
+outputs:
+  path:
+    type: string
+    description: The project path the PNG was saved at.
+  file_id:
+    type: string
+    description: The id of the saved file.
+  url:
+    type: string
+    description: Download URL of the saved file.
+  pixels:
+    type: string
+    description: The image size, <width>x<height>, in pixels.
+env:
+  DATATORCH_API_KEY:
+    description: API key used to save the file and, with auth on, to render private pages. Never reaches the page's JavaScript.
+  DATATORCH_API_URL:
+    description: Optional instance URL; defaults to https://datatorch.io.
+runs:
+  using: python
+  main: main.py
